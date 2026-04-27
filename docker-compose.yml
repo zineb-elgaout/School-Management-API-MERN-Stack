@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # ─── Base de données ───
+  mongo:
+    image: mongo:7
+    container_name: edunode-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - edunode-network
+
+  # ─── Backend API ───
+  backend:
+    build: ./backend
+    container_name: edunode-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mongo
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - edunode-network
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+
+networks:
+  edunode-network:
+    driver: bridge
