@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # ─── Base de données ───
   mongo:
     image: mongo:7
     container_name: edunode-mongo
@@ -12,7 +9,6 @@ services:
     networks:
       - edunode-network
 
-  # ─── Backend API ───
   backend:
     build: ./backend
     container_name: edunode-backend
@@ -24,6 +20,22 @@ services:
       - mongo
     volumes:
       - ./backend:/app
+      - /app/node_modules
+    networks:
+      - edunode-network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: edunode-frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
       - /app/node_modules
     networks:
       - edunode-network
