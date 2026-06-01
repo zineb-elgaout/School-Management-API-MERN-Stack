@@ -8,6 +8,8 @@ const {
   createStudent,
   updateStudent,
   deleteStudent,
+  getDeletedStudents,
+  restoreStudent,
 } = require('../controllers/studentController');
 
 const adminAuth = require('../middlewares/auth');
@@ -21,11 +23,13 @@ const jsonValidator = require('../middlewares/jsonValidator');
  *   description: Gestion des étudiants
  */
 
+// ─── Routes GET fixes (AVANT /:id) ───────────────────────
+
 /**
  * @swagger
  * /students:
  *   get:
- *     summary: Lister tous les étudiants
+ *     summary: Lister tous les étudiants actifs
  *     tags: [Students]
  *     parameters:
  *       - in: query
@@ -53,6 +57,22 @@ router.get('/export', exportStudents);
 
 /**
  * @swagger
+ * /students/deleted:
+ *   get:
+ *     summary: Lister les étudiants supprimés (corbeille)
+ *     tags: [Students]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des étudiants supprimés
+ */
+router.get('/deleted', adminAuth, getDeletedStudents);
+
+// ─── Route dynamique (APRÈS les routes fixes) ────────────
+
+/**
+ * @swagger
  * /students/{id}:
  *   get:
  *     summary: Récupérer un étudiant par ID
@@ -70,6 +90,8 @@ router.get('/export', exportStudents);
  *         description: Étudiant non trouvé
  */
 router.get('/:id', getStudentById);
+
+// ─── Routes admin ─────────────────────────────────────────
 
 /**
  * @swagger
@@ -124,6 +146,28 @@ router.post('/', rateLimiter, jsonValidator, adminAuth, createStudent);
  *         description: Étudiant non trouvé
  */
 router.put('/:id', jsonValidator, adminAuth, updateStudent);
+
+/**
+ * @swagger
+ * /students/{id}/restore:
+ *   patch:
+ *     summary: Restaurer un étudiant supprimé
+ *     tags: [Students]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Étudiant restauré
+ *       404:
+ *         description: Étudiant non trouvé
+ */
+router.patch('/:id/restore', adminAuth, restoreStudent);
 
 /**
  * @swagger
