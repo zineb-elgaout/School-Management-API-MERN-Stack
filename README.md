@@ -1,3 +1,8 @@
+<img width="1851" height="871" alt="image" src="https://github.com/user-attachments/assets/22138ca9-9927-40cd-b84c-5720b02ce61d" />
+
+<img width="1871" height="891" alt="image" src="https://github.com/user-attachments/assets/4b962aa8-ffd1-45c3-a73c-e3eba2ca8211" />
+
+
 # School Management API - MERN Stack
 
 A comprehensive School Management System built with the MERN stack (MongoDB, Express.js, React, Node.js). This full-stack application provides a complete solution for managing school operations including student records, staff management, academic scheduling, and administrative tasks.
@@ -9,29 +14,6 @@ A comprehensive School Management System built with the MERN stack (MongoDB, Exp
   - Academic progress tracking
   - Attendance monitoring
   - Grade management and transcripts
-
-- **Staff Management**
-  - Teacher and staff directory
-  - Schedule management
-  - Performance tracking
-  - Leave and attendance records
-
-- **Academic Management**
-  - Class and course management
-  - Curriculum planning
-  - Timetable scheduling
-  - Exam and assessment management
-
-- **Administrative Dashboard**
-  - Real-time analytics and reporting
-  - Financial management
-  - Communication and notifications
-  - Document management
-
-- **User Authentication & Authorization**
-  - Role-based access control (Admin, Teacher, Student, Parent)
-  - Secure authentication
-  - Session management
 
 ## 🛠 Tech Stack
 
@@ -142,33 +124,6 @@ School-Management-API-MERN-Stack/
 └── README.md             # This file
 ```
 
-## 🔐 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-
-### Students
-- `GET /api/students` - Get all students
-- `POST /api/students` - Create new student
-- `GET /api/students/:id` - Get student details
-- `PUT /api/students/:id` - Update student
-- `DELETE /api/students/:id` - Delete student
-
-### Teachers
-- `GET /api/teachers` - Get all teachers
-- `POST /api/teachers` - Create new teacher
-- `GET /api/teachers/:id` - Get teacher details
-- `PUT /api/teachers/:id` - Update teacher
-- `DELETE /api/teachers/:id` - Delete teacher
-
-### Classes
-- `GET /api/classes` - Get all classes
-- `POST /api/classes` - Create new class
-- `GET /api/classes/:id` - Get class details
-- `PUT /api/classes/:id` - Update class
-- `DELETE /api/classes/:id` - Delete class
 
 *For complete API documentation, refer to the API docs or Postman collection.*
 
@@ -215,9 +170,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Found a bug or have a feature idea? Please open an issue on GitHub with a clear description and steps to reproduce.
 
-## 📞 Support
-
-For support, email support@schoolmanagement.com or open an issue in the repository.
 
 ## 🙏 Acknowledgments
 
