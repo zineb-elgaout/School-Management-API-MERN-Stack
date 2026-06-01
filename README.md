@@ -1,129 +1,186 @@
-# School Management API — MERN Stack
+<img width="1851" height="871" alt="image" src="https://github.com/user-attachments/assets/22138ca9-9927-40cd-b84c-5720b02ce61d" />
 
-A modern school management application with a React frontend, Express/MongoDB backend, and Docker support.
 
-## 🚀 Overview
 
-This repository implements a school student management system using the MERN stack:
+<img width="1871" height="891" alt="image" src="https://github.com/user-attachments/assets/4b962aa8-ffd1-45c3-a73c-e3eba2ca8211" />
 
-- **Frontend:** React + Vite + Tailwind CSS
-- **Backend:** Express.js + MongoDB + Swagger documentation
-- **Features:** student CRUD, soft delete/restore, CSV export, basic statistics, API key protection
-- **Deployment:** Docker Compose for local development
 
-## ✨ Key Features
+# School Management API - MERN Stack
 
-- Create, read, update and delete student records
-- Soft-delete workflow with restore support
-- Filter students by department (`filiere`)
-- Export active student data to CSV
-- View average statistics via `/stats/average`
-- Admin routes protected by `x-api-key`
-- Swagger API documentation available at `/api-docs`
+A comprehensive School Management System built with the MERN stack (MongoDB, Express.js, React, Node.js). This full-stack application provides a complete solution for managing school operations including student records, staff management, academic scheduling, and administrative tasks.
 
-## 📁 Project Structure
+## 🎯 Features
 
-- `backend/` — Express API server
-  - `src/index.js` — server bootstrap
-  - `src/routes/` — student and stats routes
-  - `src/controllers/` — business logic
-  - `src/models/Student.js` — Mongoose schema
-  - `src/config/db.js` — MongoDB connection
-  - `src/config/swagger.js` — OpenAPI specification
-- `frontend/` — React application
-  - `src/api/students.js` — API client
-  - `src/components/` — UI components
-  - `src/main.jsx` — app entrypoint
+- **Student Management**
+  - Student registration and profile management
+  - Academic progress tracking
+  - Attendance monitoring
+  - Grade management and transcripts
 
-## 🛠️ Requirements
-
-- Node.js 18+ / npm
-- Docker & Docker Compose (optional, recommended)
-- MongoDB connection string
-
-## 🔧 Environment Variables
-
-### Backend
-
-Create `backend/.env` with:
-
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/school-management
-API_KEY=edunode-secret-key-2024
-```
+## 🛠 Tech Stack
 
 ### Frontend
+- **React** - UI library
+- **CSS** - Styling
+- **HTML** - Markup
 
-Create `frontend/.env` with:
+### Backend
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web application framework
+- **MongoDB** - NoSQL database
 
-```env
-VITE_API_URL=http://localhost:5000
-VITE_API_KEY=edunode-secret-key-2024
+### DevOps
+- **Docker** - Containerization
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+- Node.js (v14.0.0 or higher)
+- npm (v6.0.0 or higher)
+- MongoDB (v4.0 or higher)
+- Docker (optional, for containerized deployment)
+
+## 🚀 Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/zineb-elgaout/School-Management-API-MERN-Stack.git
+cd School-Management-API-MERN-Stack
 ```
 
-> The frontend defaults to `http://localhost:5000` and a built-in API key if none are provided.
-
-## ⚡ Run Locally
-
-### Backend only
-
+### 2. Install Backend Dependencies
 ```bash
 cd backend
 npm install
+```
+
+### 3. Install Frontend Dependencies
+```bash
+cd ../frontend
+npm install
+```
+
+### 4. Environment Configuration
+
+Create a `.env` file in the backend directory:
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/school-management
+JWT_SECRET=your_jwt_secret_key
+NODE_ENV=development
+```
+
+Create a `.env` file in the frontend directory:
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+## 🏃 Running the Application
+
+### Development Mode
+
+**Backend:**
+```bash
+cd backend
+npm start
+# or for development with auto-reload
 npm run dev
 ```
 
-### Frontend only
-
+**Frontend (in another terminal):**
 ```bash
 cd frontend
-npm install
-npm run dev
+npm start
 ```
 
-### Full stack with Docker Compose
+The application will be available at `http://localhost:3000`
+
+### Production Mode with Docker
 
 ```bash
 docker-compose up --build
 ```
 
-## 🌐 API Endpoints
+## 📁 Project Structure
 
-| Method | Path                     | Description                          |
-| ------ | ------------------------ | ------------------------------------ |
-| GET    | `/students`              | List active students                 |
-| GET    | `/students?filiere=INFO` | Filter students by department        |
-| GET    | `/students/export`       | Download active students as CSV      |
-| GET    | `/students/:id`          | Get student by ID                    |
-| POST   | `/students`              | Create student (admin only)          |
-| PUT    | `/students/:id`          | Update student (admin only)          |
-| DELETE | `/students/:id`          | Soft delete student (admin only)     |
-| PATCH  | `/students/:id/restore`  | Restore deleted student (admin only) |
-| GET    | `/students/deleted`      | List deleted students (admin only)   |
-| GET    | `/stats/average`         | Student statistics summary           |
-
-## 🧪 API Documentation
-
-Swagger UI is available after starting the backend at:
-
-```text
-http://localhost:5000/api-docs
+```
+School-Management-API-MERN-Stack/
+├── backend/
+│   ├── models/           # Database models
+│   ├── routes/           # API routes
+│   ├── controllers/       # Business logic
+│   ├── middleware/        # Custom middleware
+│   ├── config/           # Configuration files
+│   ├── .env              # Environment variables
+│   └── server.js         # Express app entry point
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # React components
+│   │   ├── pages/        # Page components
+│   │   ├── services/     # API service calls
+│   │   ├── styles/       # CSS files
+│   │   └── App.js        # Main React component
+│   └── public/           # Static files
+├── Dockerfile            # Docker configuration
+├── docker-compose.yml    # Docker Compose configuration
+└── README.md             # This file
 ```
 
 
-## 🧩 Frontend Notes
+*For complete API documentation, refer to the API docs or Postman collection.*
 
-- The app calls the backend API through `frontend/src/api/students.js`
-- Protect admin actions with `x-api-key`
-- Tailwind CSS is configured in `frontend/tailwind.config.js`
+## 🧪 Testing
 
-## 📌 Notes
+### Backend Tests
+```bash
+cd backend
+npm test
+```
 
-- Soft delete is implemented by `isDeleted` on the student model.
-- Email uniqueness is enforced for active students only.
-- The API supports CSV export and basic statistics through backend services.
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+## 📊 Database Schema
+
+The application uses MongoDB with the following main collections:
+- **Users** - Authentication and user profiles
+- **Students** - Student information
+- **Teachers** - Staff information
+- **Classes** - Class details
+- **Courses** - Course information
+- **Attendance** - Attendance records
+- **Grades** - Academic grades
 
 ## 🤝 Contributing
 
-Feel free to improve the UI, add authentication, or extend student analytics.
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🐛 Bug Reports & Feature Requests
+
+Found a bug or have a feature idea? Please open an issue on GitHub with a clear description and steps to reproduce.
+
+
+## 🙏 Acknowledgments
+
+- MERN Stack community
+- MongoDB documentation
+- Express.js community
+- React documentation
+- All contributors and supporters
+
+---
+
+**Made with ❤️ by Zineb El Ghaout**
