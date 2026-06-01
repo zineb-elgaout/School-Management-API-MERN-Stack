@@ -9,8 +9,7 @@ const studentSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, 'L\'email est obligatoire'],
-      unique: true,
+      required: [true, "L'email est obligatoire"],
       lowercase: true,
       trim: true,
     },
@@ -24,7 +23,7 @@ const studentSchema = new mongoose.Schema(
       type: [Number],
       default: [],
       validate: {
-        validator: (grades) => grades.every(g => g >= 0 && g <= 20),
+        validator: (grades) => grades.every((g) => g >= 0 && g <= 20),
         message: 'Les notes doivent être entre 0 et 20',
       },
     },
@@ -33,8 +32,15 @@ const studentSchema = new mongoose.Schema(
       default: false,
     },
   },
+  { timestamps: true }
+);
+
+// unique seulement pour les étudiants actifs
+studentSchema.index(
+  { email: 1 },
   {
-    timestamps: true, // createdAt + updatedAt automatiques
+    unique: true,
+    partialFilterExpression: { isDeleted: false },
   }
 );
 

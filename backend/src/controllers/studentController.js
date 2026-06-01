@@ -4,18 +4,11 @@ const Student = require('../models/Student');
 const getAllStudents = async (req, res) => {
   try {
     const filter = { isDeleted: false };
-
-    // Filtrage par filière (query param)
     if (req.query.filiere) {
       filter.filiere = req.query.filiere.toUpperCase();
     }
-
     const students = await Student.find(filter).sort({ createdAt: -1 });
-
-    res.json({
-      count: students.length,
-      data: students,
-    });
+    res.json({ count: students.length, data: students });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -25,7 +18,6 @@ const getAllStudents = async (req, res) => {
 const exportStudents = async (req, res) => {
   try {
     const students = await Student.find({ isDeleted: false });
-
     const headers = 'id,name,email,filiere,grades,average,createdAt\n';
     const rows = students.map((s) => {
       const avg = s.grades.length
@@ -33,12 +25,20 @@ const exportStudents = async (req, res) => {
         : 'N/A';
       return `${s._id},${s.name},${s.email},${s.filiere},"${s.grades.join('|')}",${avg},${s.createdAt.toISOString()}`;
     });
-
     const csv = headers + rows.join('\n');
-
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
     res.status(200).send(csv);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ─── GET /students/deleted ───────────────────────────────
+const getDeletedStudents = async (req, res) => {
+  try {
+    const students = await Student.find({ isDeleted: true }).sort({ updatedAt: -1 });
+    res.json({ count: students.length, data: students });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -51,11 +51,9 @@ const getStudentById = async (req, res) => {
       _id: req.params.id,
       isDeleted: false,
     });
-
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
     }
-
     res.json({ data: student });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -67,14 +65,30 @@ const createStudent = async (req, res) => {
   try {
     const { name, email, filiere, grades } = req.body;
 
-    const student = await Student.create({ name, email, filiere, grades });
+    // ✅ Si email existe en soft delete → réactiver
+    const deletedStudent = await Student.findOne({
+      email: email.toLowerCase(),
+      isDeleted: true,
+    });
 
+    if (deletedStudent) {
+      const restored = await Student.findByIdAndUpdate(
+        deletedStudent._id,
+        { name, filiere, grades, isDeleted: false },
+        { new: true, runValidators: true }
+      );
+      return res.status(200).json({
+        message: 'Student restored and updated successfully',
+        data: restored,
+      });
+    }
+
+    const student = await Student.create({ name, email, filiere, grades });
     res.status(201).json({
       message: 'Student created successfully',
       data: student,
     });
   } catch (error) {
-    // Erreur duplicate email
     if (error.code === 11000) {
       return res.status(409).json({ error: 'Email already exists' });
     }
@@ -90,15 +104,10 @@ const updateStudent = async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     );
-
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
     }
-
-    res.json({
-      message: 'Student updated successfully',
-      data: student,
-    });
+    res.json({ message: 'Student updated successfully', data: student });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -112,15 +121,27 @@ const deleteStudent = async (req, res) => {
       { isDeleted: true },
       { new: true }
     );
-
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
     }
+    res.json({ message: 'Student deleted successfully (soft delete)', data: student });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-    res.json({
-      message: 'Student deleted successfully (soft delete)',
-      data: student,
-    });
+// ─── PATCH /students/:id/restore ─────────────────────────
+const restoreStudent = async (req, res) => {
+  try {
+    const student = await Student.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: true },
+      { isDeleted: false },
+      { new: true }
+    );
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found or not deleted' });
+    }
+    res.json({ message: 'Student restored successfully', data: student });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -129,8 +150,10 @@ const deleteStudent = async (req, res) => {
 module.exports = {
   getAllStudents,
   exportStudents,
+  getDeletedStudents,
   getStudentById,
   createStudent,
   updateStudent,
   deleteStudent,
+  restoreStudent,
 };

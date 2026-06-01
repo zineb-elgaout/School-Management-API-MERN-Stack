@@ -11,9 +11,11 @@ const adminHeaders = {
   'Content-Type': 'application/json',
 };
 
-// ─── Students ────────────────────────────────────────────
 export const getStudents = (filiere = '') =>
   API.get(`/students${filiere ? `?filiere=${filiere}` : ''}`);
+
+export const getDeletedStudents = () =>
+  API.get('/students/deleted', { headers: { 'x-api-key': API_KEY } });
 
 export const getStudentById = (id) =>
   API.get(`/students/${id}`);
@@ -27,10 +29,11 @@ export const updateStudent = (id, data) =>
 export const deleteStudent = (id) =>
   API.delete(`/students/${id}`, { headers: { 'x-api-key': API_KEY } });
 
-// ─── Stats ───────────────────────────────────────────────
+export const restoreStudent = (id) =>
+  API.patch(`/students/${id}/restore`, {}, { headers: { 'x-api-key': API_KEY } });
+
 export const getStats = () =>
   API.get('/stats/average');
 
-// ─── Export ──────────────────────────────────────────────
 export const exportCSV = () =>
   API.get('/students/export', { responseType: 'blob' });

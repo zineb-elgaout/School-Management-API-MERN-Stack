@@ -1,5 +1,10 @@
 import { useState } from 'react';
 
+const FILIERES = ['INFO', 'MATH', 'ECO', 'PHYS', 'CHIMIE'];
+
+const inputClassName =
+  'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100';
+
 const StudentForm = ({ onSubmit, initial = {}, onCancel }) => {
   const [form, setForm] = useState({
     name: initial.name || '',
@@ -17,7 +22,10 @@ const StudentForm = ({ onSubmit, initial = {}, onCancel }) => {
     const data = {
       ...form,
       grades: form.grades
-        ? form.grades.split(',').map((g) => parseFloat(g.trim())).filter((g) => !isNaN(g))
+        ? form.grades
+            .split(',')
+            .map((grade) => parseFloat(grade.trim()))
+            .filter((grade) => !Number.isNaN(grade))
         : [],
     };
     onSubmit(data);
@@ -25,58 +33,70 @@ const StudentForm = ({ onSubmit, initial = {}, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-        <input
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          required
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Ahmed Benali"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-        <input
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="ahmed@edunode.com"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Filière</label>
-        <select
-          name="filiere"
-          value={form.filiere}
-          onChange={handleChange}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {['INFO', 'MATH', 'ECO', 'PHYS', 'CHIMIE'].map((f) => (
-            <option key={f} value={f}>{f}</option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Notes (séparées par des virgules)
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="block space-y-1.5">
+          <span className="text-sm font-semibold text-slate-700">Nom complet</span>
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            required
+            className={inputClassName}
+            placeholder="Ahmed Benali"
+          />
         </label>
-        <input
-          name="grades"
-          value={form.grades}
-          onChange={handleChange}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="14, 16, 12, 18"
-        />
+
+        <label className="block space-y-1.5">
+          <span className="text-sm font-semibold text-slate-700">Email</span>
+          <input
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className={inputClassName}
+            placeholder="ahmed@edunode.com"
+          />
+        </label>
       </div>
-      <div className="flex gap-3 pt-2">
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="block space-y-1.5">
+          <span className="text-sm font-semibold text-slate-700">Filiere</span>
+          <select
+            name="filiere"
+            value={form.filiere}
+            onChange={handleChange}
+            className={inputClassName}
+          >
+            {FILIERES.map((filiere) => (
+              <option key={filiere} value={filiere}>
+                {filiere}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block space-y-1.5">
+          <span className="text-sm font-semibold text-slate-700">Notes</span>
+          <input
+            name="grades"
+            value={form.grades}
+            onChange={handleChange}
+            className={inputClassName}
+            placeholder="14, 16, 12, 18"
+          />
+        </label>
+      </div>
+
+      <p className="text-xs text-slate-500">
+        Format des notes: separees par des virgules.
+      </p>
+
+      <div className="flex flex-col gap-2 pt-1 sm:flex-row">
         <button
           type="submit"
-          className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
         >
           Enregistrer
         </button>
@@ -84,7 +104,7 @@ const StudentForm = ({ onSubmit, initial = {}, onCancel }) => {
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition font-medium"
+            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Annuler
           </button>
