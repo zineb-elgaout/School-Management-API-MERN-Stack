@@ -48,45 +48,77 @@ This repository implements a school student management system using the MERN sta
 ## 🔧 Environment Variables
 
 ### Backend
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web application framework
+- **MongoDB** - NoSQL database
 
-Create `backend/.env` with:
+### DevOps
+- **Docker** - Containerization
 
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/school-management
-API_KEY=edunode-secret-key-2024
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+- Node.js (v14.0.0 or higher)
+- npm (v6.0.0 or higher)
+- MongoDB (v4.0 or higher)
+- Docker (optional, for containerized deployment)
+
+## 🚀 Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/zineb-elgaout/School-Management-API-MERN-Stack.git
+cd School-Management-API-MERN-Stack
 ```
 
-### Frontend
-
-Create `frontend/.env` with:
-
-```env
-VITE_API_URL=http://localhost:5000
-VITE_API_KEY=edunode-secret-key-2024
-```
-
-> The frontend defaults to `http://localhost:5000` and a built-in API key if none are provided.
-
-## ⚡ Run Locally
-
-### Backend only
-
+### 2. Install Backend Dependencies
 ```bash
 cd backend
 npm install
+```
+
+### 3. Install Frontend Dependencies
+```bash
+cd ../frontend
+npm install
+```
+
+### 4. Environment Configuration
+
+Create a `.env` file in the backend directory:
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/school-management
+JWT_SECRET=your_jwt_secret_key
+NODE_ENV=development
+```
+
+Create a `.env` file in the frontend directory:
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+## 🏃 Running the Application
+
+### Development Mode
+
+**Backend:**
+```bash
+cd backend
+npm start
+# or for development with auto-reload
 npm run dev
 ```
 
-### Frontend only
-
+**Frontend (in another terminal):**
 ```bash
 cd frontend
-npm install
-npm run dev
+npm start
 ```
 
-### Full stack with Docker Compose
+The application will be available at `http://localhost:3000`
+
+### Production Mode with Docker
 
 ```bash
 docker-compose up --build
