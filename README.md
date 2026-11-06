@@ -47,78 +47,78 @@ This repository implements a school student management system using the MERN sta
 
 ## 🔧 Environment Variables
 
+## ✨ Key Features
+
+- Create, read, update and delete student records
+- Soft-delete workflow with restore support
+- Filter students by department (`filiere`)
+- Export active student data to CSV
+- View average statistics via `/stats/average`
+- Admin routes protected by `x-api-key`
+- Swagger API documentation available at `/api-docs`
+
+## 📁 Project Structure
+
+- `backend/` — Express API server
+  - `src/index.js` — server bootstrap
+  - `src/routes/` — student and stats routes
+  - `src/controllers/` — business logic
+  - `src/models/Student.js` — Mongoose schema
+  - `src/config/db.js` — MongoDB connection
+  - `src/config/swagger.js` — OpenAPI specification
+- `frontend/` — React application
+  - `src/api/students.js` — API client
+  - `src/components/` — UI components
+  - `src/main.jsx` — app entrypoint
+
+## 🛠️ Requirements
+
+- Node.js 18+ / npm
+- Docker & Docker Compose (optional, recommended)
+- MongoDB connection string
+
+## 🔧 Environment Variables
+
 ### Backend
-- **Node.js** - JavaScript runtime
-- **Express.js** - Web application framework
-- **MongoDB** - NoSQL database
 
-### DevOps
-- **Docker** - Containerization
+Create `backend/.env` with:
 
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following installed:
-- Node.js (v14.0.0 or higher)
-- npm (v6.0.0 or higher)
-- MongoDB (v4.0 or higher)
-- Docker (optional, for containerized deployment)
-
-## 🚀 Installation
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/zineb-elgaout/School-Management-API-MERN-Stack.git
-cd School-Management-API-MERN-Stack
-```
-
-### 2. Install Backend Dependencies
-```bash
-cd backend
-npm install
-```
-
-### 3. Install Frontend Dependencies
-```bash
-cd ../frontend
-npm install
-```
-
-### 4. Environment Configuration
-
-Create a `.env` file in the backend directory:
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/school-management
-JWT_SECRET=your_jwt_secret_key
-NODE_ENV=development
+MONGO_URI=mongodb://localhost:27017/school-management
+API_KEY=edunode-secret-key-2024
 ```
 
-Create a `.env` file in the frontend directory:
+### Frontend
+
+Create `frontend/.env` with:
+
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000
+VITE_API_KEY=edunode-secret-key-2024
 ```
 
-## 🏃 Running the Application
+> The frontend defaults to `http://localhost:5000` and a built-in API key if none are provided.
 
-### Development Mode
+## ⚡ Run Locally
 
-**Backend:**
+### Backend only
+
 ```bash
 cd backend
-npm start
-# or for development with auto-reload
+npm install
 npm run dev
 ```
 
-**Frontend (in another terminal):**
+### Frontend only
+
 ```bash
 cd frontend
-npm start
+npm install
+npm run dev
 ```
 
-The application will be available at `http://localhost:3000`
-
-### Production Mode with Docker
+### Full stack with Docker Compose
 
 ```bash
 docker-compose up --build
