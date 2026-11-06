@@ -1,151 +1,54 @@
-const Student = require('../models/Student');
+const asyncHandler = require('../utils/asyncHandler');
+const studentService = require('../services/studentService');
 
-// ─── GET /students ───────────────────────────────────────
-const getAllStudents = async (req, res) => {
-  try {
-    const filter = { isDeleted: false };
-    if (req.query.filiere) {
-      filter.filiere = req.query.filiere.toUpperCase();
-    }
-    const students = await Student.find(filter).sort({ createdAt: -1 });
-    res.json({ count: students.length, data: students });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+const getAllStudents = asyncHandler(async (req, res) => {
+  const result = await studentService.listStudents({ filiere: req.query.filiere });
+  res.json(result);
+});
 
-// ─── GET /students/export ────────────────────────────────
-const exportStudents = async (req, res) => {
-  try {
-    const students = await Student.find({ isDeleted: false });
-    const headers = 'id,name,email,filiere,grades,average,createdAt\n';
-    const rows = students.map((s) => {
-      const avg = s.grades.length
-        ? (s.grades.reduce((a, b) => a + b, 0) / s.grades.length).toFixed(2)
-        : 'N/A';
-      return `${s._id},${s.name},${s.email},${s.filiere},"${s.grades.join('|')}",${avg},${s.createdAt.toISOString()}`;
-    });
-    const csv = headers + rows.join('\n');
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
-    res.status(200).send(csv);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+const exportStudents = asyncHandler(async (req, res) => {
+  const csv = await studentService.exportStudentsCsv();
 
-// ─── GET /students/deleted ───────────────────────────────
-const getDeletedStudents = async (req, res) => {
-  try {
-    const students = await Student.find({ isDeleted: true }).sort({ updatedAt: -1 });
-    res.json({ count: students.length, data: students });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
+  res.status(200).send(csv);
+});
 
-// ─── GET /students/:id ───────────────────────────────────
-const getStudentById = async (req, res) => {
-  try {
-    const student = await Student.findOne({
-      _id: req.params.id,
-      isDeleted: false,
-    });
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-    res.json({ data: student });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+const getDeletedStudents = asyncHandler(async (req, res) => {
+  const result = await studentService.listDeletedStudents();
+  res.json(result);
+});
 
-// ─── POST /students ──────────────────────────────────────
-const createStudent = async (req, res) => {
-  try {
-    const { name, email, filiere, grades } = req.body;
+const getStudentById = asyncHandler(async (req, res) => {
+  const student = await studentService.getStudentById(req.params.id);
+  res.json({ data: student });
+});
 
-    // ✅ Si email existe en soft delete → réactiver
-    const deletedStudent = await Student.findOne({
-      email: email.toLowerCase(),
-      isDeleted: true,
-    });
+const createStudent = asyncHandler(async (req, res) => {
+  const { data, restored } = await studentService.createStudent(req.body);
 
-    if (deletedStudent) {
-      const restored = await Student.findByIdAndUpdate(
-        deletedStudent._id,
-        { name, filiere, grades, isDeleted: false },
-        { new: true, runValidators: true }
-      );
-      return res.status(200).json({
-        message: 'Student restored and updated successfully',
-        data: restored,
-      });
-    }
+  res.status(restored ? 200 : 201).json({
+    message: restored
+      ? 'Student restored and updated successfully'
+      : 'Student created successfully',
+    data,
+  });
+});
 
-    const student = await Student.create({ name, email, filiere, grades });
-    res.status(201).json({
-      message: 'Student created successfully',
-      data: student,
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ error: 'Email already exists' });
-    }
-    res.status(400).json({ error: error.message });
-  }
-};
+const updateStudent = asyncHandler(async (req, res) => {
+  const student = await studentService.updateStudent(req.params.id, req.body);
+  res.json({ message: 'Student updated successfully', data: student });
+});
 
-// ─── PUT /students/:id ───────────────────────────────────
-const updateStudent = async (req, res) => {
-  try {
-    const student = await Student.findOneAndUpdate(
-      { _id: req.params.id, isDeleted: false },
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-    res.json({ message: 'Student updated successfully', data: student });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
+const deleteStudent = asyncHandler(async (req, res) => {
+  const student = await studentService.deleteStudent(req.params.id);
+  res.json({ message: 'Student deleted successfully (soft delete)', data: student });
+});
 
-// ─── DELETE /students/:id (soft delete) ──────────────────
-const deleteStudent = async (req, res) => {
-  try {
-    const student = await Student.findOneAndUpdate(
-      { _id: req.params.id, isDeleted: false },
-      { isDeleted: true },
-      { new: true }
-    );
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-    res.json({ message: 'Student deleted successfully (soft delete)', data: student });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// ─── PATCH /students/:id/restore ─────────────────────────
-const restoreStudent = async (req, res) => {
-  try {
-    const student = await Student.findOneAndUpdate(
-      { _id: req.params.id, isDeleted: true },
-      { isDeleted: false },
-      { new: true }
-    );
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found or not deleted' });
-    }
-    res.json({ message: 'Student restored successfully', data: student });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+const restoreStudent = asyncHandler(async (req, res) => {
+  const student = await studentService.restoreStudent(req.params.id);
+  res.json({ message: 'Student restored successfully', data: student });
+});
 
 module.exports = {
   getAllStudents,

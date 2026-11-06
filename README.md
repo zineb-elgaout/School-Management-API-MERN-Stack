@@ -2,15 +2,6 @@
 
 A modern school management application with a React frontend, Express/MongoDB backend, and Docker support.
 
----
-
-<img width="1851" height="871" alt="image" src="https://github.com/user-attachments/assets/22138ca9-9927-40cd-b84c-5720b02ce61d" />
-
----
-
-
-
-
 ## 🚀 Overview
 
 This repository implements a school student management system using the MERN stack:
@@ -19,6 +10,42 @@ This repository implements a school student management system using the MERN sta
 - **Backend:** Express.js + MongoDB + Swagger documentation
 - **Features:** student CRUD, soft delete/restore, CSV export, basic statistics, API key protection
 - **Deployment:** Docker Compose for local development
+
+## ✨ Key Features
+
+- Create, read, update and delete student records
+- Soft-delete workflow with restore support
+- Filter students by department (`filiere`)
+- Export active student data to CSV
+- View average statistics via `/stats/average`
+- Admin routes protected by `x-api-key`
+- Swagger API documentation available at `/api-docs`
+
+## 📁 Project Structure
+
+- `backend/` — Express API server (clean architecture layers)
+  - `src/index.js` — process bootstrap (env, DB connection, listen)
+  - `src/app.js` — Express app factory (testable, no side effects)
+  - `src/routes/` — HTTP route definitions
+  - `src/controllers/` — thin HTTP adapters
+  - `src/services/` — business rules
+  - `src/repositories/` — Mongoose data access
+  - `src/models/Student.js` — Mongoose schema
+  - `src/errors/` + `src/middlewares/` — error handling, auth, validation
+  - `src/utils/` — pure helpers (CSV, stats)
+  - `tests/` — Jest unit and integration tests
+- `frontend/` — React application
+  - `src/api/students.js` — API client
+  - `src/components/` — UI components
+  - `src/main.jsx` — app entrypoint
+
+## 🛠️ Requirements
+
+- Node.js 18+ / npm
+- Docker & Docker Compose (optional, recommended)
+- MongoDB connection string
+
+## 🔧 Environment Variables
 
 ## ✨ Key Features
 
@@ -120,10 +147,19 @@ Swagger UI is available after starting the backend at:
 http://localhost:5000/api-docs
 ```
 
----
-<img width="1871" height="891" alt="image" src="https://github.com/user-attachments/assets/4b962aa8-ffd1-45c3-a73c-e3eba2ca8211" />
+## 🧪 Tests
 
----
+The backend uses Jest (unit) and Supertest (HTTP integration). Run from `backend/`:
+
+```bash
+npm test              # run the full suite
+npm run test:watch    # watch mode
+npm run test:coverage # coverage report
+```
+
+The suite covers services, controllers, middleware and pure utilities, plus
+HTTP-level routes with mocked services.
+
 
 ## 🧩 Frontend Notes
 
@@ -140,7 +176,3 @@ http://localhost:5000/api-docs
 ## 🤝 Contributing
 
 Feel free to improve the UI, add authentication, or extend student analytics.
-
----
-
-**Made with ❤️ by Zineb El Ghaout**

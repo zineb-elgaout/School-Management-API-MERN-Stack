@@ -1,14 +1,18 @@
 const express = require('express');
-const router = express.Router();
-const { getStats } = require('../services/statsService');
+const { getAverageStats } = require('../controllers/statsController');
 
-router.get('/average', async (req, res) => {
-  try {
-    const stats = await getStats();
-    res.json({ data: stats });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+const router = express.Router();
+
+/**
+ * @swagger
+ * /stats/average:
+ *   get:
+ *     summary: Statistiques des étudiants actifs
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Moyenne générale et statistiques par filière
+ */
+router.get('/average', getAverageStats);
 
 module.exports = router;
