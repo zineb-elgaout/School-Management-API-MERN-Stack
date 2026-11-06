@@ -23,13 +23,17 @@ This repository implements a school student management system using the MERN sta
 
 ## 📁 Project Structure
 
-- `backend/` — Express API server
-  - `src/index.js` — server bootstrap
-  - `src/routes/` — student and stats routes
-  - `src/controllers/` — business logic
+- `backend/` — Express API server (clean architecture layers)
+  - `src/index.js` — process bootstrap (env, DB connection, listen)
+  - `src/app.js` — Express app factory (testable, no side effects)
+  - `src/routes/` — HTTP route definitions
+  - `src/controllers/` — thin HTTP adapters
+  - `src/services/` — business rules
+  - `src/repositories/` — Mongoose data access
   - `src/models/Student.js` — Mongoose schema
-  - `src/config/db.js` — MongoDB connection
-  - `src/config/swagger.js` — OpenAPI specification
+  - `src/errors/` + `src/middlewares/` — error handling, auth, validation
+  - `src/utils/` — pure helpers (CSV, stats)
+  - `tests/` — Jest unit and integration tests
 - `frontend/` — React application
   - `src/api/students.js` — API client
   - `src/components/` — UI components
@@ -110,6 +114,19 @@ Swagger UI is available after starting the backend at:
 ```text
 http://localhost:5000/api-docs
 ```
+
+## 🧪 Tests
+
+The backend uses Jest (unit) and Supertest (HTTP integration). Run from `backend/`:
+
+```bash
+npm test              # run the full suite
+npm run test:watch    # watch mode
+npm run test:coverage # coverage report
+```
+
+The suite covers services, controllers, middleware and pure utilities, plus
+HTTP-level routes with mocked services.
 
 
 ## 🧩 Frontend Notes
