@@ -1,178 +1,230 @@
 # School Management API — MERN Stack
 
-A modern school management application with a React frontend, Express/MongoDB backend, and Docker support.
+[![CI](https://github.com/zineb-elgaout/School-Management-API-MERN-Stack/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/zineb-elgaout/School-Management-API-MERN-Stack/actions/workflows/ci.yml)
+[![Docker Image CI](https://github.com/zineb-elgaout/School-Management-API-MERN-Stack/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/zineb-elgaout/School-Management-API-MERN-Stack/actions/workflows/docker-image.yml)
 
-## 🚀 Overview
+A full-stack school management application built with the MERN stack. It provides a REST API for managing students, a React dashboard, CSV export, statistics, soft delete, Swagger documentation, and Docker support.
 
-This repository implements a school student management system using the MERN stack:
+## Technologies
 
-- **Frontend:** React + Vite + Tailwind CSS
-- **Backend:** Express.js + MongoDB + Swagger documentation
-- **Features:** student CRUD, soft delete/restore, CSV export, basic statistics, API key protection
-- **Deployment:** Docker Compose for local development
+| Layer    | Stack                                                 |
+| -------- | ----------------------------------------------------- |
+| Frontend | React 19, Vite 8, Tailwind CSS 3, Axios, React Router |
+| Backend  | Node.js, Express 5, Mongoose 9                        |
+| Database | MongoDB                                                |
+| API docs | Swagger (swagger-jsdoc + swagger-ui-express)           |
+| Testing  | Jest, Supertest                                        |
+| DevOps   | Docker, Docker Compose, GitHub Actions                |
 
-## ✨ Key Features
+## Features
 
-- Create, read, update and delete student records
-- Soft-delete workflow with restore support
-- Filter students by department (`filiere`)
-- Export active student data to CSV
-- View average statistics via `/stats/average`
-- Admin routes protected by `x-api-key`
-- Swagger API documentation available at `/api-docs`
+- Student CRUD (create, read, update, delete)
+- Soft delete via the `isDeleted` flag
+- Filter active students by `filiere`
+- Export active students to CSV
+- Average grade statistics via `/stats/average`
+- Admin routes protected by an `x-api-key` header
+- Rate limiting on student creation
+- JSON content-type and empty-body validation
+- Interactive Swagger documentation at `/api-docs`
+- Layered backend architecture: routes → controllers → services → repositories → model
+- Frontend dashboard with student table, form, statistics cards, and deleted-students view
+- Clean layered architecture that keeps HTTP, business logic, and data access separate
+- Centralized error handling with `AppError` and a shared error middleware
+- Reusable `asyncHandler` for concise async controllers
+- Request validation (API key, JSON content type, non-empty body) and rate limiting
+- Automated tests across services, controllers, middlewares, and utilities
+- Continuous integration for tests, linting, builds, and Docker images
 
-## 📁 Project Structure
+## Project Structure
 
-- `backend/` — Express API server (clean architecture layers)
-  - `src/index.js` — process bootstrap (env, DB connection, listen)
-  - `src/app.js` — Express app factory (testable, no side effects)
-  - `src/routes/` — HTTP route definitions
-  - `src/controllers/` — thin HTTP adapters
-  - `src/services/` — business rules
-  - `src/repositories/` — Mongoose data access
-  - `src/models/Student.js` — Mongoose schema
-  - `src/errors/` + `src/middlewares/` — error handling, auth, validation
-  - `src/utils/` — pure helpers (CSV, stats)
-  - `tests/` — Jest unit and integration tests
-- `frontend/` — React application
-  - `src/api/students.js` — API client
-  - `src/components/` — UI components
-  - `src/main.jsx` — app entrypoint
+```text
+.
+├── backend/
+│   ├── src/
+│   │   ├── app.js                 # Express app factory
+│   │   ├── index.js               # Server bootstrap
+│   │   ├── config/                # MongoDB connection + Swagger spec
+│   │   ├── controllers/           # HTTP handlers
+│   │   ├── errors/                # AppError
+│   │   ├── middlewares/           # Auth, error handler, logger, rate limit, JSON validation
+│   │   ├── models/                # Mongoose models
+│   │   ├── repositories/          # Data access layer
+│   │   ├── routes/                # Student and stats routes
+│   │   ├── services/              # Business logic
+│   │   └── utils/                 # Async handler, CSV, stats helpers
+│   ├── tests/
+│   │   ├── integration/
+│   │   └── unit/
+│   ├── Dockerfile
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── api/                   # Axios API client
+│   │   ├── components/            # StudentTable, StudentForm, StatsCard
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── Dockerfile
+│   └── package.json
+├── .github/workflows/
+│   ├── ci.yml                     # Tests, lint, build
+│   └── docker-image.yml           # Docker image builds
+├── docker-compose.yml
+└── README.md
+```
 
-## 🛠️ Requirements
+## Prerequisites
 
-- Node.js 18+ / npm
-- Docker & Docker Compose (optional, recommended)
-- MongoDB connection string
+- **Node.js 24+** with **npm 11+**
+- **MongoDB** (local instance or Docker)
+- **Docker & Docker Compose** (optional, recommended)
 
-## 🔧 Environment Variables
+## Environment Variables
 
-## ✨ Key Features
-
-- Create, read, update and delete student records
-- Soft-delete workflow with restore support
-- Filter students by department (`filiere`)
-- Export active student data to CSV
-- View average statistics via `/stats/average`
-- Admin routes protected by `x-api-key`
-- Swagger API documentation available at `/api-docs`
-
-## 📁 Project Structure
-
-- `backend/` — Express API server
-  - `src/index.js` — server bootstrap
-  - `src/routes/` — student and stats routes
-  - `src/controllers/` — business logic
-  - `src/models/Student.js` — Mongoose schema
-  - `src/config/db.js` — MongoDB connection
-  - `src/config/swagger.js` — OpenAPI specification
-- `frontend/` — React application
-  - `src/api/students.js` — API client
-  - `src/components/` — UI components
-  - `src/main.jsx` — app entrypoint
-
-## 🛠️ Requirements
-
-- Node.js 18+ / npm
-- Docker & Docker Compose (optional, recommended)
-- MongoDB connection string
-
-## 🔧 Environment Variables
-
-### Backend
-
-Create `backend/.env` with:
+### Backend — `backend/.env`
 
 ```env
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/school-management
-API_KEY=edunode-secret-key-2024
+MONGO_URI=mongodb://localhost:27017/edunode
+API_KEY=your_secret_key_here
+NODE_ENV=development
 ```
 
-### Frontend
+When running through Docker Compose, use the MongoDB service hostname:
 
-Create `frontend/.env` with:
+```env
+MONGO_URI=mongodb://mongo:27017/edunode
+```
+
+### Frontend — `frontend/.env`
 
 ```env
 VITE_API_URL=http://localhost:5000
-VITE_API_KEY=edunode-secret-key-2024
+VITE_API_KEY=your_secret_key_here
 ```
 
-> The frontend defaults to `http://localhost:5000` and a built-in API key if none are provided.
+`VITE_API_KEY` must match the backend `API_KEY`.
 
-## ⚡ Run Locally
+## Run Locally
 
-### Backend only
+### Backend
 
 ```bash
 cd backend
 npm install
-npm run dev
+npm run dev        # nodemon, http://localhost:5000
+# or
+npm start
 ```
 
-### Frontend only
+### Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev        # Vite, http://localhost:5173
 ```
 
 ### Full stack with Docker Compose
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-## 🌐 API Endpoints
+- Frontend: http://localhost:5173
+- Backend: http://localhost:5000
+- MongoDB: `localhost:27017`
 
-| Method | Path                     | Description                          |
-| ------ | ------------------------ | ------------------------------------ |
-| GET    | `/students`              | List active students                 |
-| GET    | `/students?filiere=INFO` | Filter students by department        |
-| GET    | `/students/export`       | Download active students as CSV      |
-| GET    | `/students/:id`          | Get student by ID                    |
-| POST   | `/students`              | Create student (admin only)          |
-| PUT    | `/students/:id`          | Update student (admin only)          |
-| DELETE | `/students/:id`          | Soft delete student (admin only)     |
-| PATCH  | `/students/:id/restore`  | Restore deleted student (admin only) |
-| GET    | `/students/deleted`      | List deleted students (admin only)   |
-| GET    | `/stats/average`         | Student statistics summary           |
+## API Endpoints
 
-## 🧪 API Documentation
+Base URL: `http://localhost:5000`
 
-Swagger UI is available after starting the backend at:
+| Method | Path                | Auth (`x-api-key`) | Description                          |
+| ------ | ------------------- | ------------------ | ------------------------------------ |
+| GET    | `/`                 | No                 | API metadata and route list          |
+| GET    | `/students`         | No                 | List active students                 |
+| GET    | `/students?filiere=`| No                 | Filter active students by department |
+| GET    | `/students/export`  | No                 | Download active students as CSV      |
+| GET    | `/students/:id`     | No                 | Get a student by ID                  |
+| POST   | `/students`         | Yes                | Create a student (rate-limited)      |
+| PUT    | `/students/:id`     | Yes                | Update a student                     |
+| DELETE | `/students/:id`     | Yes                | Soft delete a student                |
+| GET    | `/stats/average`    | No                 | Student count, average, by department|
+
+Protected routes require:
+
+```http
+x-api-key: your_secret_key_here
+```
+
+`filiere` values: `INFO`, `MATH`, `ECO`, `PHYS`, `CHIMIE`.
+
+### Example request
+
+```bash
+curl -X POST http://localhost:5000/students \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: your_secret_key_here" \
+  -d '{"name":"Ada Lovelace","email":"ada@example.com","filiere":"INFO","grades":[18,17]}'
+```
+
+## API Documentation
+
+Swagger UI is available once the backend is running:
 
 ```text
 http://localhost:5000/api-docs
 ```
 
-## 🧪 Tests
+## Testing
 
-The backend uses Jest (unit) and Supertest (HTTP integration). Run from `backend/`:
+Backend tests use Jest and Supertest:
 
 ```bash
-npm test              # run the full suite
+cd backend
+npm test              # run all tests
 npm run test:watch    # watch mode
-npm run test:coverage # coverage report
+npm run test:coverage # coverage report in backend/coverage
 ```
 
-The suite covers services, controllers, middleware and pure utilities, plus
-HTTP-level routes with mocked services.
+Frontend checks:
 
+```bash
+cd frontend
+npm run lint
+npm run build
+```
 
-## 🧩 Frontend Notes
+## Continuous Integration
 
-- The app calls the backend API through `frontend/src/api/students.js`
-- Protect admin actions with `x-api-key`
-- Tailwind CSS is configured in `frontend/tailwind.config.js`
+Two GitHub Actions workflows run on pushes and pull requests:
 
-## 📌 Notes
+### `ci.yml`
 
-- Soft delete is implemented by `isDeleted` on the student model.
-- Email uniqueness is enforced for active students only.
-- The API supports CSV export and basic statistics through backend services.
+- **Backend — tests:** installs dependencies with `npm ci`, runs Jest with coverage, uploads the coverage report as an artifact.
+- **Frontend — lint & build:** installs dependencies with `npm ci`, runs ESLint, then builds the production bundle with Vite.
 
-## 🤝 Contributing
+### `docker-image.yml`
 
-Feel free to improve the UI, add authentication, or extend student analytics.
+- Builds the `backend` and `frontend` Docker images from their respective Dockerfiles.
+- Uses Docker Buildx with GitHub Actions layer caching.
+- Does not push images (`push: false`); it only validates that the images build.
+
+## Notes
+
+- Soft delete is implemented with the `isDeleted` field on the `Student` model.
+- Email uniqueness is enforced by MongoDB.
+- Grades must be between 0 and 20.
+- `POST /students` is rate-limited to 10 requests per minute per IP.
+- CORS is enabled for local development.
+
+## Contributing
+
+1. Create a feature branch: `git checkout -b feature/my-feature`
+2. Make your changes and run the tests/lint locally.
+3. Commit and push your branch.
+4. Open a pull request against `main`.
+
+## License
+
+ISC
