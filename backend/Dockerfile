@@ -1,5 +1,5 @@
 # Image de base Node.js légère
-FROM node:20-alpine
+FROM node:24-alpine
 
 # Dossier de travail dans le conteneur
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Installer les dépendances
-RUN npm install
+RUN npm ci
 
 # Copier le reste du code
 COPY . .
