@@ -1,39 +1,20 @@
-import axios from 'axios';
-
-const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-});
-
-const API_KEY = import.meta.env.VITE_API_KEY || '';
-
-const adminHeaders = {
-  'x-api-key': API_KEY,
-  'Content-Type': 'application/json',
-};
+import client from './client';
 
 export const getStudents = (filiere = '') =>
-  API.get(`/students${filiere ? `?filiere=${filiere}` : ''}`);
+  client.get(`/students${filiere ? `?filiere=${filiere}` : ''}`);
 
-export const getDeletedStudents = () =>
-  API.get('/students/deleted', { headers: { 'x-api-key': API_KEY } });
+export const getDeletedStudents = () => client.get('/students/deleted');
 
-export const getStudentById = (id) =>
-  API.get(`/students/${id}`);
+export const getStudentById = (id) => client.get(`/students/${id}`);
 
-export const createStudent = (data) =>
-  API.post('/students', data, { headers: adminHeaders });
+export const createStudent = (data) => client.post('/students', data);
 
-export const updateStudent = (id, data) =>
-  API.put(`/students/${id}`, data, { headers: adminHeaders });
+export const updateStudent = (id, data) => client.put(`/students/${id}`, data);
 
-export const deleteStudent = (id) =>
-  API.delete(`/students/${id}`, { headers: { 'x-api-key': API_KEY } });
+export const deleteStudent = (id) => client.delete(`/students/${id}`);
 
-export const restoreStudent = (id) =>
-  API.patch(`/students/${id}/restore`, {}, { headers: { 'x-api-key': API_KEY } });
+export const restoreStudent = (id) => client.patch(`/students/${id}/restore`);
 
-export const getStats = () =>
-  API.get('/stats/average');
+export const getStats = () => client.get('/stats/average');
 
-export const exportCSV = () =>
-  API.get('/students/export', { responseType: 'blob' });
+export const exportCSV = () => client.get('/students/export', { responseType: 'blob' });

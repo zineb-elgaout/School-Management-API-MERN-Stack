@@ -1,13 +1,26 @@
 const rateLimit = require('express-rate-limit');
 
-const rateLimiter = rateLimit({
-  windowMs: 60 * 1000,    // fenêtre de 1 minute
-  max: 10,                 // max 10 requêtes par IP
+const baseOptions = {
+  windowMs: 60 * 1000,
   standardHeaders: true,
   legacyHeaders: false,
+};
+
+const studentWriteLimiter = rateLimit({
+  ...baseOptions,
+  max: 10,
   message: {
     error: 'Too many requests — please wait 1 minute before trying again',
   },
 });
 
-module.exports = rateLimiter;
+const loginLimiter = rateLimit({
+  ...baseOptions,
+  max: 10,
+  message: {
+    error: 'Too many login attempts — please wait 1 minute before trying again',
+  },
+});
+
+module.exports = { studentWriteLimiter, loginLimiter };
+module.exports.default = studentWriteLimiter;

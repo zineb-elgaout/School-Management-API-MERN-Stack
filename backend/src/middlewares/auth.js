@@ -1,35 +1,43 @@
-const crypto = require('crypto');
+const { verifyToken } = require('../utils/token');
 
-const safeCompare = (provided, expected) => {
-  if (typeof provided !== 'string' || typeof expected !== 'string') return false;
+const getBearerToken = (authorizationHeader) => {
+  if (typeof authorizationHeader !== 'string') return null;
 
-  const providedBuffer = Buffer.from(provided);
-  const expectedBuffer = Buffer.from(expected);
+  const [scheme, token] = authorizationHeader.split(' ');
 
-  if (providedBuffer.length !== expectedBuffer.length) return false;
+  if (scheme !== 'Bearer' || !token) return null;
 
-  return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
+  return token;
 };
 
-const adminAuth = (req, res, next) => {
-  const configuredKey = process.env.API_KEY;
+const authenticate = (req, res, next) => {
+  const token = getBearerToken(req.headers.authorization);
 
-  if (!configuredKey) {
-    return res.status(500).json({ error: 'Server API key is not configured' });
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
   }
 
-  const apiKey = req.headers['x-api-key'];
-
-  if (!apiKey) {
-    return res.status(401).json({ error: 'Unauthorized — API key missing' });
+  try {
+    const payload = verifyToken(token);
+    req.user = { id: payload.sub, role: payload.role };
+    return next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
-
-  if (!safeCompare(apiKey, configuredKey)) {
-    return res.status(403).json({ error: 'Forbidden — Invalid API key' });
-  }
-
-  return next();
 };
 
-module.exports = adminAuth;
-module.exports.safeCompare = safeCompare;
+const authorize =
+  (...allowedRoles) =>
+  (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    return next();
+  };
+
+module.exports = { authenticate, authorize, getBearerToken };

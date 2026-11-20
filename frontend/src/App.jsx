@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import StudentTable from './components/StudentTable';
 import StudentForm from './components/StudentForm';
 import StatsCard from './components/StatsCard';
+import LoginScreen from './components/LoginScreen';
+import { useAuth } from './auth/useAuth';
 import {
   getStudents,
   getDeletedStudents,
@@ -16,6 +18,7 @@ import {
 const FILIERES = ['', 'INFO', 'MATH', 'ECO', 'PHYS', 'CHIMIE'];
 
 export default function App() {
+  const { user, loading: authLoading, logout } = useAuth();
   const [students, setStudents] = useState([]);
   const [deletedStudents, setDeletedStudents] = useState([]);
   const [stats, setStats] = useState(null);
@@ -51,12 +54,14 @@ export default function App() {
   }, [filiere]);
 
   useEffect(() => {
+    if (!user) return undefined;
+
     const timer = setTimeout(() => {
       fetchData();
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [fetchData]);
+  }, [fetchData, user]);
 
   const handleCreate = async (data) => {
     try {
@@ -119,6 +124,18 @@ export default function App() {
 
   const list = viewMode === 'active' ? students : deletedStudents;
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm font-semibold text-slate-500">
+        Chargement...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
       <div className="pointer-events-none absolute -left-28 -top-28 h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" />
@@ -138,7 +155,11 @@ export default function App() {
             </p>
           </div>
 
-          <div className="fade-up delay-1 flex flex-wrap gap-3">
+          <div className="fade-up delay-1 flex flex-wrap items-center gap-3">
+            <span className="text-sm text-slate-600">
+              Connecté :{' '}
+              <span className="font-semibold text-slate-900">{user.name}</span>
+            </span>
             <button
               onClick={handleExport}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow"
@@ -154,6 +175,12 @@ export default function App() {
               className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
             >
               Ajouter un etudiant
+            </button>
+            <button
+              onClick={logout}
+              className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100"
+            >
+              Déconnexion
             </button>
           </div>
         </div>

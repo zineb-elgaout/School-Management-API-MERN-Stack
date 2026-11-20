@@ -8,8 +8,9 @@ A production-minded, full-stack school management application built on the **MER
 layered REST API with a modern React dashboard for managing students, tracking grades, exporting
 reports, and recovering soft-deleted records — all with interactive API documentation and Docker support.
 
-> **Highlights:** clean layered backend · 81 automated tests · Swagger/OpenAPI docs · soft delete &
-> restore · CSV export · API-key protection · rate limiting · CI/CD with Docker image validation.
+> **Highlights:** clean layered backend · JWT authentication · 98 automated tests · Swagger/OpenAPI docs ·
+> soft delete & restore · CSV export · role-based authorization · rate limiting · CI/CD with Docker image
+> validation.
 
 ---
 
@@ -38,8 +39,8 @@ reports, and recovering soft-deleted records — all with interactive API docume
 EduNode is designed as a reference for building a maintainable full-stack application, not just a CRUD demo:
 
 - **Separation of concerns** — HTTP handling, business rules, and data access never bleed into each other.
-- **Defensive by default** — timing-safe API-key checks, rate limiting, strict input validation, and CSV
-  injection protection.
+- **Defensive by default** — hashed passwords, signed JWTs, role checks, rate limiting, strict input
+  validation, and CSV injection protection.
 - **Operationally ready** — containerized services, health-friendly bootstrap, environment-based configuration,
   and CI that runs tests, linting, builds, and Docker image validation.
 - **Tested** — Jest + Supertest across services, controllers, middlewares, and utilities.
@@ -50,6 +51,7 @@ EduNode is designed as a reference for building a maintainable full-stack applic
 | -------------- | ---------------------------------------------------------------------------- |
 | **Frontend**   | React 19 · Vite 8 · Tailwind CSS 3 · Axios                                   |
 | **Backend**    | Node.js · Express 5 · Mongoose 9                                             |
+| **Auth**       | JWT (jsonwebtoken) · bcryptjs · role-based authorization                     |
 | **Database**   | MongoDB                                                                      |
 | **API Docs**   | Swagger (swagger-jsdoc + swagger-ui-express)                                 |
 | **Testing**    | Jest · Supertest                                                             |
@@ -94,16 +96,25 @@ HTTP Request
 - **CSV export** of active students, hardened against CSV/formula injection.
 - **Statistics** endpoint: total active students, overall average, and per-department analytics (count, average, min, max).
 
+### Authentication & authorization
+
+- **JWT authentication** with `POST /auth/login` and a `Bearer` token.
+- Passwords hashed with **bcrypt**; hashes are never returned by the API.
+- **Role-based authorization** middleware — `admin` is the only role for now.
+- Session restore via `GET /auth/me` and token expiry (`JWT_EXPIRES_IN`).
+- Admin bootstrap through a seed script; additional admins can be created by an authenticated admin.
+
 ### Security & reliability
 
-- Admin routes protected by an `x-api-key` header using **timing-safe comparison**.
-- **Rate limiting** on student creation (10 requests/minute/IP).
+- All write and trash routes require a valid JWT and the `admin` role.
+- **Rate limiting** on login and student creation (10 requests/minute/IP).
 - Strict **JSON content-type** and empty-body validation.
 - Centralized error handling with consistent `{ error }` responses.
 - Environment-based configuration; no secrets committed.
 
 ### Frontend experience
 
+- Minimalist login screen with persistent session and logout.
 - Responsive React dashboard built with Tailwind CSS.
 - Statistics cards, filterable student table, and create/edit forms.
 - Active students vs. trash (deleted) views with restore actions.
@@ -124,14 +135,15 @@ HTTP Request
 │   │   ├── app.js                  # Express app factory
 │   │   ├── index.js                # Server bootstrap
 │   │   ├── config/                 # MongoDB connection + Swagger spec
-│   │   ├── controllers/            # HTTP handlers
+│   │   ├── controllers/            # HTTP handlers (auth, students, stats)
 │   │   ├── errors/                 # AppError
-│   │   ├── middlewares/           # Auth, errors, logger, rate limit, JSON validation
-│   │   ├── models/                 # Mongoose models
-│   │   ├── repositories/           # Data-access layer
-│   │   ├── routes/                 # Student and stats routes
-│   │   ├── services/               # Business logic
-│   │   └── utils/                  # Async handler, CSV, stats helpers
+│   │   ├── middlewares/            # JWT auth, roles, errors, logger, rate limit, JSON validation
+│   │   ├── models/                 # Mongoose models (User, Student)
+│   │   ├── repositories/           # Data-access layer (users, students)
+│   │   ├── routes/                 # Auth, student, and stats routes
+│   │   ├── scripts/                # Admin seed script
+│   │   ├── services/               # Business logic (auth, students, stats)
+│   │   └── utils/                  # Async handler, JWT, password, CSV, stats helpers
 │   ├── tests/
 │   │   ├── integration/
 │   │   └── unit/
@@ -140,8 +152,9 @@ HTTP Request
 ├── frontend/
 │   ├── public/                     # Static assets (favicon)
 │   ├── src/
-│   │   ├── api/                    # Axios API client
-│   │   ├── components/             # StatsCard, StudentForm, StudentTable
+│   │   ├── api/                    # Axios client (token interceptor) + endpoints
+│   │   ├── auth/                   # Auth context, provider, and hook
+│   │   ├── components/             # LoginScreen, StatsCard, StudentForm, StudentTable
 │   │   ├── App.jsx                 # Dashboard shell
 │   │   ├── index.css               # Tailwind entry point
 │   │   └── main.jsx                # React bootstrap
@@ -178,7 +191,8 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Make sure `VITE_API_KEY` matches the backend `API_KEY`.
+Generate a strong `JWT_SECRET` (for example with `openssl rand -hex 32`) and set the `ADMIN_*`
+variables used to bootstrap the first account.
 
 ### 3. Run the backend
 
@@ -190,12 +204,29 @@ npm run dev        # nodemon → http://localhost:5000
 npm start
 ```
 
-### 4. Run the frontend
+### 4. Create the first admin
+
+With MongoDB running and `ADMIN_EMAIL` / `ADMIN_PASSWORD` configured:
+
+```bash
+cd backend
+npm run seed:admin
+```
+
+This creates a single `admin` account. Use these credentials on the login screen.
+
+### 5. Run the frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev        # Vite → http://localhost:5173
+```
+
+If you use Docker Compose, seed the admin once the stack is up:
+
+```bash
+docker compose exec backend npm run seed:admin
 ```
 
 ### Option: run everything with Docker Compose
@@ -215,12 +246,16 @@ docker compose up --build
 
 ### Backend — `backend/.env`
 
-| Variable    | Description                          | Example                              |
-| ----------- | ------------------------------------ | ------------------------------------ |
-| `PORT`      | HTTP port                            | `5000`                               |
-| `MONGO_URI` | MongoDB connection string            | `mongodb://localhost:27017/edunode`  |
-| `API_KEY`   | Secret key for protected routes      | `your_secret_key_here`               |
-| `NODE_ENV`  | Runtime environment                  | `development`                        |
+| Variable         | Description                                   | Example                             |
+| ---------------- | --------------------------------------------- | ----------------------------------- |
+| `PORT`           | HTTP port                                     | `5000`                              |
+| `MONGO_URI`      | MongoDB connection string                     | `mongodb://localhost:27017/edunode` |
+| `NODE_ENV`       | Runtime environment                           | `development`                       |
+| `JWT_SECRET`     | Secret used to sign JWT access tokens         | `a_long_random_secret`              |
+| `JWT_EXPIRES_IN` | Token lifetime                                | `7d`                                |
+| `ADMIN_NAME`     | Name for the seeded admin account             | `Administrator`                     |
+| `ADMIN_EMAIL`    | Email for the seeded admin account            | `admin@edunode.com`                 |
+| `ADMIN_PASSWORD` | Password for the seeded admin account         | `change_me`                         |
 
 When running through Docker Compose, point MongoDB at the service hostname:
 
@@ -230,45 +265,69 @@ MONGO_URI=mongodb://mongo:27017/edunode
 
 ### Frontend — `frontend/.env`
 
-| Variable       | Description                     | Example                     |
-| -------------- | ------------------------------- | --------------------------- |
-| `VITE_API_URL` | Base URL of the backend API     | `http://localhost:5000`     |
-| `VITE_API_KEY` | Must match the backend `API_KEY`| `your_secret_key_here`      |
+| Variable       | Description                 | Example                 |
+| -------------- | --------------------------- | ----------------------- |
+| `VITE_API_URL` | Base URL of the backend API | `http://localhost:5000` |
 
 ## API Reference
 
 **Base URL:** `http://localhost:5000`
 
-| Method | Endpoint                   | Auth (`x-api-key`) | Description                                |
-| ------ | -------------------------- | :----------------: | ------------------------------------------ |
-| GET    | `/`                        |         No         | API metadata and available routes          |
-| GET    | `/students`                |         No         | List active students                       |
-| GET    | `/students?filiere=INFO`   |         No         | Filter active students by department       |
-| GET    | `/students/export`         |         No         | Download active students as CSV            |
-| GET    | `/students/deleted`        |        Yes         | List soft-deleted students (trash)         |
-| GET    | `/students/:id`            |         No         | Get a student by ID                        |
-| POST   | `/students`                |        Yes         | Create a student (rate-limited)            |
-| PUT    | `/students/:id`            |        Yes         | Update a student                           |
-| DELETE | `/students/:id`            |        Yes         | Soft delete a student                      |
-| PATCH  | `/students/:id/restore`    |        Yes         | Restore a soft-deleted student             |
-| GET    | `/stats/average`           |         No         | Overall and per-department statistics      |
+| Method | Endpoint                   | Auth (Bearer JWT) | Description                                |
+| ------ | -------------------------- | :---------------: | ------------------------------------------ |
+| POST   | `/auth/login`              |        No         | Authenticate and receive a JWT             |
+| GET    | `/auth/me`                 |        Yes        | Get the authenticated user                 |
+| POST   | `/auth/register`           |   Yes (admin)     | Create a new admin account                 |
+| GET    | `/`                        |        No         | API metadata and available routes          |
+| GET    | `/students`                |        No         | List active students                       |
+| GET    | `/students?filiere=INFO`   |        No         | Filter active students by department       |
+| GET    | `/students/export`         |        No         | Download active students as CSV            |
+| GET    | `/students/deleted`        |        Yes        | List soft-deleted students (trash)         |
+| GET    | `/students/:id`            |        No         | Get a student by ID                        |
+| POST   | `/students`                |        Yes        | Create a student (rate-limited)            |
+| PUT    | `/students/:id`            |        Yes        | Update a student                           |
+| DELETE | `/students/:id`            |        Yes        | Soft delete a student                      |
+| PATCH  | `/students/:id/restore`    |        Yes        | Restore a soft-deleted student             |
+| GET    | `/stats/average`           |        No         | Overall and per-department statistics      |
 
-Protected routes require the API key header:
+Protected routes require a valid access token:
 
 ```http
-x-api-key: your_secret_key_here
+Authorization: Bearer <token>
 ```
 
 Valid departments (`filiere`): `INFO`, `MATH`, `ECO`, `PHYS`, `CHIMIE`.
 
 ### Example requests
 
+**Log in**
+
+```bash
+curl -X POST http://localhost:5000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@edunode.com","password":"change_me"}'
+```
+
+The response contains a `token` and the authenticated `user`:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "664f1b2c9e1a2b3c4d5e6f7a",
+    "name": "Administrator",
+    "email": "admin@edunode.com",
+    "role": "admin"
+  }
+}
+```
+
 **Create a student**
 
 ```bash
 curl -X POST http://localhost:5000/students \
   -H "Content-Type: application/json" \
-  -H "x-api-key: your_secret_key_here" \
+  -H "Authorization: Bearer <token>" \
   -d '{"name":"Ada Lovelace","email":"ada@example.com","filiere":"INFO","grades":[18,17]}'
 ```
 
@@ -288,7 +347,7 @@ curl -O http://localhost:5000/students/export
 
 ```bash
 curl -X PATCH http://localhost:5000/students/<id>/restore \
-  -H "x-api-key: your_secret_key_here"
+  -H "Authorization: Bearer <token>"
 ```
 
 ### Response shape
@@ -321,6 +380,8 @@ http://localhost:5000/api-docs
 
 ## Data Model & Validation
 
+### Student
+
 | Field       | Type       | Rules                                                        |
 | ----------- | ---------- | ------------------------------------------------------------ |
 | `name`      | `String`   | Required, trimmed                                            |
@@ -337,6 +398,22 @@ Additional rules:
 - `POST` and `PUT` require `Content-Type: application/json` and a non-empty body.
 - `POST /students` is limited to **10 requests per minute per IP**.
 
+### User
+
+| Field      | Type     | Rules                                                     |
+| ---------- | -------- | --------------------------------------------------------- |
+| `name`     | `String` | Required, trimmed                                         |
+| `email`    | `String` | Required, normalized to lowercase, unique                 |
+| `password` | `String` | Required, hashed with bcrypt, excluded from query results |
+| `role`     | `String` | `admin` (only role for now)                               |
+
+Authentication rules:
+
+- Passwords must be at least **8 characters**.
+- Login is rate-limited to **10 attempts per minute per IP**.
+- Tokens are signed with `JWT_SECRET` and expire after `JWT_EXPIRES_IN` (default `7d`).
+- Only authenticated `admin` users can create students, manage the trash, or register new admins.
+
 ## Testing
 
 The backend ships with unit and integration tests:
@@ -348,8 +425,8 @@ npm run test:watch    # watch mode
 npm run test:coverage # coverage report in backend/coverage
 ```
 
-Current status: **81 tests across 9 suites**, covering services, controllers, middlewares, utilities,
-and the Express app.
+Current status: **98 tests across 10 suites**, covering authentication, services, controllers,
+middlewares, utilities, and the Express app.
 
 Frontend checks:
 

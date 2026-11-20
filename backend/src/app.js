@@ -4,6 +4,7 @@ const swaggerUi = require('swagger-ui-express');
 
 const swaggerSpec = require('./config/swagger');
 const logger = require('./middlewares/logger');
+const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
@@ -20,6 +21,7 @@ const createApp = () => {
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+  app.use('/auth', authRoutes);
   app.use('/students', studentRoutes);
   app.use('/stats', statsRoutes);
 
@@ -28,6 +30,9 @@ const createApp = () => {
       message: '🎓 EduNode API is running!',
       version: '1.0.0',
       routes: [
+        'POST   /auth/login',
+        'GET    /auth/me',
+        'POST   /auth/register',
         'GET    /students',
         'GET    /students/export',
         'GET    /students/deleted',

@@ -12,9 +12,11 @@ const {
   restoreStudent,
 } = require('../controllers/studentController');
 
-const adminAuth = require('../middlewares/auth');
-const rateLimiter = require('../middlewares/rateLimiter');
+const { authenticate, authorize } = require('../middlewares/auth');
+const { studentWriteLimiter } = require('../middlewares/rateLimiter');
 const jsonValidator = require('../middlewares/jsonValidator');
+
+const adminOnly = [authenticate, authorize('admin')];
 
 /**
  * @swagger
@@ -62,12 +64,12 @@ router.get('/export', exportStudents);
  *     summary: Lister les étudiants supprimés (corbeille)
  *     tags: [Students]
  *     security:
- *       - ApiKeyAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des étudiants supprimés
  */
-router.get('/deleted', adminAuth, getDeletedStudents);
+router.get('/deleted', ...adminOnly, getDeletedStudents);
 
 // ─── Route dynamique (APRÈS les routes fixes) ────────────
 
@@ -100,7 +102,7 @@ router.get('/:id', getStudentById);
  *     summary: Créer un nouvel étudiant
  *     tags: [Students]
  *     security:
- *       - ApiKeyAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -111,13 +113,13 @@ router.get('/:id', getStudentById);
  *       201:
  *         description: Étudiant créé
  *       401:
- *         description: Clé API manquante
+ *         description: Jeton manquant ou invalide
  *       403:
- *         description: Clé API invalide
+ *         description: Rôle insuffisant
  *       429:
  *         description: Trop de requêtes
  */
-router.post('/', rateLimiter, jsonValidator, adminAuth, createStudent);
+router.post('/', studentWriteLimiter, jsonValidator, ...adminOnly, createStudent);
 
 /**
  * @swagger
@@ -126,7 +128,7 @@ router.post('/', rateLimiter, jsonValidator, adminAuth, createStudent);
  *     summary: Modifier un étudiant
  *     tags: [Students]
  *     security:
- *       - ApiKeyAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -145,7 +147,7 @@ router.post('/', rateLimiter, jsonValidator, adminAuth, createStudent);
  *       404:
  *         description: Étudiant non trouvé
  */
-router.put('/:id', jsonValidator, adminAuth, updateStudent);
+router.put('/:id', jsonValidator, ...adminOnly, updateStudent);
 
 /**
  * @swagger
@@ -154,7 +156,7 @@ router.put('/:id', jsonValidator, adminAuth, updateStudent);
  *     summary: Restaurer un étudiant supprimé
  *     tags: [Students]
  *     security:
- *       - ApiKeyAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -167,7 +169,7 @@ router.put('/:id', jsonValidator, adminAuth, updateStudent);
  *       404:
  *         description: Étudiant non trouvé
  */
-router.patch('/:id/restore', adminAuth, restoreStudent);
+router.patch('/:id/restore', ...adminOnly, restoreStudent);
 
 /**
  * @swagger
@@ -176,7 +178,7 @@ router.patch('/:id/restore', adminAuth, restoreStudent);
  *     summary: Supprimer un étudiant (soft delete)
  *     tags: [Students]
  *     security:
- *       - ApiKeyAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -189,6 +191,6 @@ router.patch('/:id/restore', adminAuth, restoreStudent);
  *       404:
  *         description: Étudiant non trouvé
  */
-router.delete('/:id', adminAuth, deleteStudent);
+router.delete('/:id', ...adminOnly, deleteStudent);
 
 module.exports = router;
