@@ -277,7 +277,7 @@ MONGO_URI=mongodb://mongo:27017/edunode
 | ------ | -------------------------- | :---------------: | ------------------------------------------ |
 | POST   | `/auth/login`              |        No         | Authenticate and receive a JWT             |
 | GET    | `/auth/me`                 |        Yes        | Get the authenticated user                 |
-| POST   | `/auth/register`           |   Yes (admin)     | Create a new admin account                 |
+| POST   | `/auth/register`           |        No         | Create a standard user account             |
 | GET    | `/`                        |        No         | API metadata and available routes          |
 | GET    | `/students`                |        No         | List active students                       |
 | GET    | `/students?filiere=INFO`   |        No         | Filter active students by department       |
@@ -321,6 +321,16 @@ The response contains a `token` and the authenticated `user`:
   }
 }
 ```
+
+**Register a standard user**
+
+```bash
+curl -X POST http://localhost:5000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Demo User","email":"demo@edunode.com","password":"Demo12345"}'
+```
+
+The new account can immediately log in with `POST /auth/login`.
 
 **Create a student**
 
@@ -405,14 +415,14 @@ Additional rules:
 | `name`     | `String` | Required, trimmed                                         |
 | `email`    | `String` | Required, normalized to lowercase, unique                 |
 | `password` | `String` | Required, hashed with bcrypt, excluded from query results |
-| `role`     | `String` | `admin` (only role for now)                               |
+| `role`     | `String` | `user` or `admin` (public signup creates `user`)           |
 
 Authentication rules:
 
 - Passwords must be at least **8 characters**.
 - Login is rate-limited to **10 attempts per minute per IP**.
 - Tokens are signed with `JWT_SECRET` and expire after `JWT_EXPIRES_IN` (default `7d`).
-- Only authenticated `admin` users can create students, manage the trash, or register new admins.
+- Public signup creates a standard `user`; only `admin` users can create students or manage the trash.
 
 ## Testing
 

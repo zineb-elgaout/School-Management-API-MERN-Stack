@@ -1,7 +1,7 @@
 const express = require('express');
 
 const { login, register, me } = require('../controllers/authController');
-const { authenticate, authorize } = require('../middlewares/auth');
+const { authenticate } = require('../middlewares/auth');
 const { loginLimiter } = require('../middlewares/rateLimiter');
 const jsonValidator = require('../middlewares/jsonValidator');
 
@@ -56,10 +56,8 @@ router.get('/me', authenticate, me);
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Creer un nouvel administrateur
+ *     summary: Creer un compte utilisateur
  *     tags: [Auth]
- *     security:
- *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -68,14 +66,10 @@ router.get('/me', authenticate, me);
  *             $ref: '#/components/schemas/RegisterRequest'
  *     responses:
  *       201:
- *         description: Administrateur cree
- *       401:
- *         description: Jeton manquant ou invalide
- *       403:
- *         description: Role insuffisant
+ *         description: Compte utilisateur cree
  *       409:
  *         description: Email deja utilise
  */
-router.post('/register', authenticate, authorize('admin'), jsonValidator, register);
+router.post('/register', jsonValidator, register);
 
 module.exports = router;

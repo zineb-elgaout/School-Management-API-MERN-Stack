@@ -16,6 +16,7 @@ const AppError = require('../../src/errors/AppError');
 const app = createApp();
 
 const adminToken = jwt.sign({ sub: 'user-1', role: 'admin' }, process.env.JWT_SECRET);
+const userToken = jwt.sign({ sub: 'user-2', role: 'user' }, process.env.JWT_SECRET);
 const bearer = `Bearer ${adminToken}`;
 
 describe('HTTP app', () => {
@@ -73,6 +74,16 @@ describe('HTTP app', () => {
     expect(studentService.createStudent).not.toHaveBeenCalled();
   });
 
+  it('POST /students rejects a standard user token', async () => {
+    const res = await request(app)
+      .post('/students')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ name: 'A', email: 'a@b.com' });
+
+    expect(res.status).toBe(403);
+    expect(studentService.createStudent).not.toHaveBeenCalled();
+  });
+
   it('POST /students rejects an invalid token', async () => {
     const res = await request(app)
       .post('/students')
@@ -123,6 +134,51 @@ describe('HTTP app', () => {
       password: 'secret123',
     });
     expect(res.body.token).toBe('token');
+  });
+
+  it('POST /auth/login maps invalid credentials to 401', async () => {
+    authService.login.mockRejectedValue(new AppError(401, 'Invalid credentials'));
+
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ email: 'admin@edunode.com', password: 'wrong' });
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Invalid credentials' });
+  });
+
+  it('POST /auth/register is public and delegates to the auth service', async () => {
+    authService.register.mockResolvedValue({
+      token: 'token',
+      user: { id: 'user-2', email: 'new@edunode.com', role: 'user' },
+    });
+
+    const res = await request(app).post('/auth/register').send({
+      name: 'New User',
+      email: 'new@edunode.com',
+      password: 'secret123',
+    });
+
+    expect(res.status).toBe(201);
+    expect(authService.register).toHaveBeenCalledWith({
+      name: 'New User',
+      email: 'new@edunode.com',
+      password: 'secret123',
+    });
+    expect(res.body.user.role).toBe('user');
+  });
+
+  it('POST /auth/register maps duplicate email errors to 409', async () => {
+    authService.register.mockRejectedValue(new AppError(409, 'Email already registered'));
+
+    const res = await request(app).post('/auth/register').send({
+      name: 'New User',
+      email: 'admin@edunode.com',
+      password: 'secret123',
+    });
+
+    expect(res.status).toBe(409);
+    expect(res.body).toEqual({ error: 'Email already registered' });
   });
 
   it('GET /auth/me returns the current user', async () => {

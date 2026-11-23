@@ -84,7 +84,7 @@ const register = async ({ name, email, password } = {}) => {
       name: name.trim(),
       email: normalizedEmail,
       password: await hashPassword(password),
-      role: 'admin',
+      role: 'user',
     });
 
     return buildSession(user);
