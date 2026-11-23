@@ -11,8 +11,16 @@ const getAverageClassName = (grades) => {
   return 'text-rose-600 font-semibold';
 };
 
-const StudentTable = ({ students, onEdit, onDelete, onRestore, mode = 'active' }) => {
+const StudentTable = ({
+  students,
+  onEdit,
+  onDelete,
+  onRestore,
+  mode = 'active',
+  canManage = false,
+}) => {
   const isDeletedMode = mode === 'deleted';
+  const showActions = canManage || isDeletedMode;
 
   if (!students || students.length === 0) {
     return (
@@ -31,7 +39,10 @@ const StudentTable = ({ students, onEdit, onDelete, onRestore, mode = 'active' }
         <table className="min-w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-900 text-left text-xs uppercase tracking-wider text-slate-200">
-              {['Nom', 'Email', 'Filiere', 'Notes', 'Moyenne', 'Actions'].map((header) => (
+              {(showActions
+                ? ['Nom', 'Email', 'Filiere', 'Notes', 'Moyenne', 'Actions']
+                : ['Nom', 'Email', 'Filiere', 'Notes', 'Moyenne']
+              ).map((header) => (
                 <th key={header} className="px-4 py-3 font-semibold first:pl-6 last:pr-6">
                   {header}
                 </th>
@@ -62,7 +73,9 @@ const StudentTable = ({ students, onEdit, onDelete, onRestore, mode = 'active' }
                   {getAverage(student.grades)}
                 </td>
                 <td className="px-4 py-3.5 last:pr-6">
-                  {isDeletedMode ? (
+                  {!showActions ? (
+                    <span className="text-slate-400">—</span>
+                  ) : isDeletedMode ? (
                     <button
                       onClick={() => onRestore(student._id)}
                       className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"

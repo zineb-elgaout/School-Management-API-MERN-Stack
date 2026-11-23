@@ -4,7 +4,7 @@ import { useAuth } from '../auth/useAuth';
 const inputClassName =
   'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100';
 
-const LoginScreen = () => {
+const LoginScreen = ({ onRegister }) => {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -80,9 +80,17 @@ const LoginScreen = () => {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Connexion...' : 'Se connecter'}
+          </button>
+
+          <button
+            type="button"
+            onClick={onRegister}
+            className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            Pas encore de compte ? Créer un compte
           </button>
         </form>
       </main>

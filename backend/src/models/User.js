@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const ROLES = ['admin'];
+const ROLES = ['user', 'admin'];
 
 const userSchema = new mongoose.Schema(
   {
@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ROLES,
-      default: 'admin',
+      default: 'user',
     },
   },
   { timestamps: true }

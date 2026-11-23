@@ -68,6 +68,20 @@ describe('authService.login', () => {
     });
     expect(result.user).not.toHaveProperty('password');
   });
+
+  it('signs the token with the role of a registered user', async () => {
+    userRepository.findByEmail.mockResolvedValue(buildUser({ role: 'user' }));
+    verifyPassword.mockResolvedValue(true);
+    signToken.mockReturnValue('user-token');
+
+    const result = await authService.login({
+      email: 'admin@edunode.com',
+      password: 'secret123',
+    });
+
+    expect(signToken).toHaveBeenCalledWith({ userId: 'user-1', role: 'user' });
+    expect(result.user.role).toBe('user');
+  });
 });
 
 describe('authService.register', () => {
@@ -97,10 +111,10 @@ describe('authService.register', () => {
     ).rejects.toMatchObject({ statusCode: 409 });
   });
 
-  it('creates an admin with a hashed password', async () => {
+  it('creates a standard user with a hashed password', async () => {
     userRepository.findByEmail.mockResolvedValue(null);
     hashPassword.mockResolvedValue('hashed-password');
-    userRepository.create.mockResolvedValue(buildUser());
+    userRepository.create.mockResolvedValue(buildUser({ role: 'user' }));
     signToken.mockReturnValue('signed-token');
 
     const result = await authService.register({
@@ -114,10 +128,10 @@ describe('authService.register', () => {
       name: 'Admin User',
       email: 'admin@edunode.com',
       password: 'hashed-password',
-      role: 'admin',
+      role: 'user',
     });
     expect(result.token).toBe('signed-token');
-    expect(result.user.role).toBe('admin');
+    expect(result.user.role).toBe('user');
   });
 
   it('maps duplicate-key errors to a 409', async () => {

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import StudentTable from './components/StudentTable';
 import StudentForm from './components/StudentForm';
 import StatsCard from './components/StatsCard';
-import LoginScreen from './components/LoginScreen';
+import AuthScreen from './components/AuthScreen';
 import { useAuth } from './auth/useAuth';
 import {
   getStudents,
@@ -19,6 +19,7 @@ const FILIERES = ['', 'INFO', 'MATH', 'ECO', 'PHYS', 'CHIMIE'];
 
 export default function App() {
   const { user, loading: authLoading, logout } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [students, setStudents] = useState([]);
   const [deletedStudents, setDeletedStudents] = useState([]);
   const [stats, setStats] = useState(null);
@@ -39,7 +40,7 @@ export default function App() {
     try {
       const [activeRes, deletedRes, statsRes] = await Promise.all([
         getStudents(filiere),
-        getDeletedStudents(),
+        isAdmin ? getDeletedStudents() : Promise.resolve({ data: { data: [] } }),
         getStats(),
       ]);
 
@@ -51,7 +52,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [filiere]);
+  }, [filiere, isAdmin]);
 
   useEffect(() => {
     if (!user) return undefined;
@@ -122,7 +123,8 @@ export default function App() {
     }
   };
 
-  const list = viewMode === 'active' ? students : deletedStudents;
+  const activeView = viewMode === 'deleted' && isAdmin ? 'deleted' : 'active';
+  const list = activeView === 'deleted' ? deletedStudents : students;
 
   if (authLoading) {
     return (
@@ -133,7 +135,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginScreen />;
+    return <AuthScreen />;
   }
 
   return (
@@ -166,16 +168,18 @@ export default function App() {
             >
               Export CSV
             </button>
-            <button
-              onClick={() => {
-                setViewMode('active');
-                setShowForm(true);
-                setEditingStudent(null);
-              }}
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
-            >
-              Ajouter un etudiant
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setViewMode('active');
+                  setShowForm(true);
+                  setEditingStudent(null);
+                }}
+                className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+              >
+                Ajouter un etudiant
+              </button>
+            )}
             <button
               onClick={logout}
               className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100"
@@ -205,34 +209,36 @@ export default function App() {
                 setEditingStudent(null);
               }}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition sm:text-sm ${
-                viewMode === 'active'
+                activeView === 'active'
                   ? 'bg-slate-900 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               Etudiants actifs ({students.length})
             </button>
-            <button
-              onClick={() => {
-                setViewMode('deleted');
-                setShowForm(false);
-                setEditingStudent(null);
-              }}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition sm:text-sm ${
-                viewMode === 'deleted'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Corbeille ({deletedStudents.length})
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setViewMode('deleted');
+                  setShowForm(false);
+                  setEditingStudent(null);
+                }}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition sm:text-sm ${
+                  activeView === 'deleted'
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Corbeille ({deletedStudents.length})
+              </button>
+            )}
 
             <span className="ml-auto inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
               {loading ? 'Chargement...' : `${list.length} element(s)`}
             </span>
           </div>
 
-          {viewMode === 'active' && (
+          {activeView === 'active' && (
             <div className="flex flex-wrap gap-2">
               {FILIERES.map((f) => (
                 <button
@@ -251,7 +257,7 @@ export default function App() {
           )}
         </section>
 
-        {viewMode === 'active' && showForm && (
+        {activeView === 'active' && showForm && (
           <section className="fade-up delay-2 mb-6 rounded-2xl border border-white/80 bg-white/90 p-5 shadow-sm backdrop-blur sm:p-6">
             <h2 className="mb-4 text-xl font-bold text-slate-900">Nouvel etudiant</h2>
             <StudentForm
@@ -261,7 +267,7 @@ export default function App() {
           </section>
         )}
 
-        {viewMode === 'active' && editingStudent && (
+        {activeView === 'active' && editingStudent && (
           <section className="fade-up delay-2 mb-6 rounded-2xl border border-white/80 bg-white/90 p-5 shadow-sm backdrop-blur sm:p-6">
             <h2 className="mb-4 text-xl font-bold text-slate-900">
               Modifier: {editingStudent.name}
@@ -277,7 +283,8 @@ export default function App() {
         <div className="fade-up delay-3">
           <StudentTable
             students={list}
-            mode={viewMode}
+            mode={activeView}
+            canManage={isAdmin}
             onEdit={(student) => {
               setEditingStudent(student);
               setShowForm(false);

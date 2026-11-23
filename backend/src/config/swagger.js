@@ -46,7 +46,7 @@ const options = {
             id: { type: 'string', example: '664f1b2c9e1a2b3c4d5e6f7a' },
             name: { type: 'string', example: 'Admin User' },
             email: { type: 'string', example: 'admin@edunode.com' },
-            role: { type: 'string', enum: ['admin'], example: 'admin' },
+            role: { type: 'string', enum: ['user', 'admin'], example: 'user' },
           },
         },
         AuthResponse: {
